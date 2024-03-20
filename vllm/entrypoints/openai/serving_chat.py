@@ -252,6 +252,7 @@ class OpenAIServingChat(OpenAIServing):
                 # Abort the request if the client disconnects.
                 await self.engine.abort(request_id)
                 return self.create_error_response("Client disconnected")
+            logger.debug(f"Received response: {res}")
             final_res = res
         assert final_res is not None
 

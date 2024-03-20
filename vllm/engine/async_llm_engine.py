@@ -71,6 +71,7 @@ class AsyncStream:
 
     async def __anext__(self) -> RequestOutput:
         result = await self._queue.get()
+        logger.debug(f"Received output for request {self.request_id}.")
         if isinstance(result, Exception):
             raise result
         return result
@@ -113,6 +114,7 @@ class RequestTracker:
         request_id = request_output.request_id
 
         self._request_streams[request_id].put(request_output)
+        logger.debug(f"Put output for request {request_id} in AsyncStream queue.")
         if request_output.finished:
             if verbose:
                 logger.info(f"Finished request {request_id}.")
@@ -143,6 +145,7 @@ class RequestTracker:
         }))
 
         self.new_requests_event.set()
+        logger.debug(f"Added request {request_id}.")
 
         return stream
 
@@ -173,6 +176,7 @@ class RequestTracker:
 
         while not self._new_requests.empty():
             stream, new_request = self._new_requests.get_nowait()
+            logger.debug(f"Adding request {new_request['request_id']}.")
             if stream.request_id in finished_requests:
                 # The request has already been aborted.
                 stream.finish()
@@ -527,7 +531,7 @@ class AsyncLLMEngine:
                 prompt=prompt,
                 prompt_token_ids=prompt_token_ids,
                 lora_request=lora_request)
-
+            
         stream = self._request_tracker.add_request(
             request_id,
             prompt=prompt,
